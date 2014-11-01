@@ -12,16 +12,28 @@ import java.io.File;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 public class ParasitePerry extends JPanel implements MouseListener, KeyListener {
-	public int width = 800;
-	public int height = 600;
-	public int pixelsize = 4;
+	//images
 	public static BufferedImage bed = null;
 	public static BufferedImage background = null;
+	public static BufferedImage personbed = null;
+	public static BufferedImage parasite = null;
+	//constants
+	public static final int FPS = 30;
+	public int width = 800;
+	public int height = 600;
+	//states
+	public int pixelsize = 4;
+	public int parasiteState = 0;
+	public boolean painting = false;
 	public static void main(String[] args) {
 		try {
 			background = ImageIO.read(new File("images/background.png"));
 			bed = ImageIO.read(new File("images/bed.png"));
+			personbed = ImageIO.read(new File("images/personbed.png"));
+			parasite = ImageIO.read(new File("images/parasite.png"));
 		} catch(Exception e) {
+			e.printStackTrace();
+			System.exit(0);
 		}
 		JFrame window = new JFrame("Parasite Perry");
 		ParasitePerry thepanel = new ParasitePerry();
@@ -34,16 +46,36 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 		thepanel.setFocusable(true);
 		thepanel.requestFocus();
 		window.toFront();
+		int next = 1;
+		long now = System.currentTimeMillis();
+		while (true) {
+			while (System.currentTimeMillis() - now < next * 1000 / FPS) {}
+			thepanel.update();
+			//skip this frame if it's still painting
+			if (!thepanel.painting) {
+				thepanel.painting = true;
+				thepanel.repaint();
+			}
+			next = next % FPS + 1;
+			if (next == 1)
+				now = System.currentTimeMillis();
+		}
 	}
 	public ParasitePerry() {
 		addKeyListener(this);
 		addMouseListener(this);
 		setBackground(Color.BLACK);
 	}
+	public void update() {
+		parasiteState = (parasiteState + 1) % 4;
+	}
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		g.drawImage(background, 0, 0, 800, 600, null);
 		g.drawImage(bed, 52, 48, 480, 480, null);
+		g.drawImage(personbed.getSubimage(0, 0, 120, 120), 32, 144, 480, 480, null);
+		g.drawImage(parasite.getSubimage(parasiteState * 5, 0, 5, 5), 200, 200, 20, 20, null);
+		painting = false;
 	}
 	public void mousePressed(MouseEvent evt) {
 		requestFocus();
