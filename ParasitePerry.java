@@ -8,11 +8,21 @@ import java.awt.event.MouseEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.KeyEvent;
 import java.awt.Insets;
+import java.io.File;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 public class ParasitePerry extends JPanel implements MouseListener, KeyListener {
 	public int width = 800;
 	public int height = 600;
 	public int pixelsize = 4;
+	public static BufferedImage bed = null;
+	public static BufferedImage background = null;
 	public static void main(String[] args) {
+		try {
+			background = ImageIO.read(new File("images/background.png"));
+			bed = ImageIO.read(new File("images/bed.png"));
+		} catch(Exception e) {
+		}
 		JFrame window = new JFrame("Parasite Perry");
 		ParasitePerry thepanel = new ParasitePerry();
 		window.setContentPane(thepanel);
@@ -32,6 +42,8 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	}
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
+		g.drawImage(background, 0, 0, 800, 600, null);
+		g.drawImage(bed, 52, 48, 480, 480, null);
 	}
 	public void mousePressed(MouseEvent evt) {
 		requestFocus();
