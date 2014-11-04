@@ -1,4 +1,3 @@
-import Gstuff.stuff;
 import javax.swing.JPanel;
 import javax.swing.JFrame;
 import java.awt.Graphics;
@@ -11,7 +10,14 @@ import java.awt.Insets;
 import java.io.File;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
+import java.awt.Toolkit;
 public class ParasitePerry extends JPanel implements MouseListener, KeyListener {
+	public static int screenwidth() {
+		return Toolkit.getDefaultToolkit().getScreenSize().width;
+	}
+	public static int screenheight() {
+		return Toolkit.getDefaultToolkit().getScreenSize().height;
+	}
 	//images
 	public static BufferedImage bed = null;
 	public static BufferedImage background = null;
@@ -42,7 +48,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 		window.setVisible(true);
 		Insets insets = window.getInsets();
 		window.setSize(thepanel.width + insets.left + insets.right, thepanel.height + insets.top + insets.bottom);
-		window.setLocation((stuff.screenwidth() - thepanel.width) / 2 - insets.left, (stuff.screenheight() - thepanel.height) / 2 - insets.top);
+		window.setLocation((screenwidth() - thepanel.width) / 2 - insets.left, (screenheight() - thepanel.height) / 2 - insets.top);
 		thepanel.setFocusable(true);
 		thepanel.requestFocus();
 		window.toFront();
