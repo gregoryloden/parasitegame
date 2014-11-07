@@ -22,15 +22,18 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public static final int FPS = 30;
 	public int width = 800;
 	public int height = 600;
+	public static final double MAX_AIR = 900;
 	//images
 	public Sprite bed = null;
 	public Sprite background = null;
 	public Sprite personbed = null;
-	public Sprite parasite = null;
+	public AnimatedSprite parasite = null;
+	public Sprite breathing = null;
 	//states
 	public int pixelSize = 4;
 	public int parasiteState = 0;
 	public boolean painting = false;
+	public int currentAir = (int)(MAX_AIR);
 	public static void main(String[] args) {
 		ParasitePerry thepanel = new ParasitePerry();
 		JFrame window = new JFrame("Parasite Perry");
@@ -63,20 +66,19 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 		addMouseListener(this);
 		setBackground(Color.BLACK);
 		try {
-			background = new Sprite(ImageIO.read(new File("images/background.png")), 1);
-			bed = new Sprite(ImageIO.read(new File("images/bed.png")), 1);
-			personbed = new Sprite(ImageIO.read(new File("images/personbed.png")), 2);
-			parasite = new Sprite(ImageIO.read(new File("images/parasite.png")), 4);
+			background = new Sprite(ImageIO.read(new File("images/background.png")), 1, 1);
+			bed = new Sprite(ImageIO.read(new File("images/bed.png")), 1, 1);
+			personbed = new Sprite(ImageIO.read(new File("images/person_bed.png")), 1, 2);
+			parasite = new AnimatedSprite(ImageIO.read(new File("images/parasite.png")), 4);
+			breathing = new Sprite(ImageIO.read(new File("images/breathing.png")), 1, 2);
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
 	}
 	public void update() {
-		background.update();
-		bed.update();
-//		personbed.update();
 		parasite.update();
+		currentAir -= 1;
 	}
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
@@ -84,6 +86,8 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 		bed.draw(g, 52, 48);
 		personbed.draw(g, 32, 144);
 		parasite.draw(g, 200, 200);
+		breathing.draw(g, 0, 1, 500, 100);
+		breathing.drawBottom(g, 0, 0, 500, 100, currentAir / MAX_AIR);
 		painting = false;
 	}
 	public void mousePressed(MouseEvent evt) {
@@ -98,21 +102,41 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public void keyReleased(KeyEvent evt) {}
 	public class Sprite {
 		private BufferedImage image;
-		private int frames;
-		private int frameState = 0;
 		private int spritew;
 		private int spriteh;
-		public Sprite(BufferedImage i, int f) {
+		public Sprite(BufferedImage i, int r, int c) {
 			image = i;
-			frames = f;
-			spriteh = i.getHeight();
-			spritew = i.getWidth() / f;
+			spriteh = i.getHeight() / r;
+			spritew = i.getWidth() / c;
 		}
-		public void update() {
-			frameState = (frameState + 1) % frames;
+		public void draw(Graphics g, int row, int col, int dx, int dy) {
+			g.drawImage(
+				image.getSubimage(col * spritew, row * spriteh, spritew, spriteh),
+				dx, dy, spritew * pixelSize, spriteh * pixelSize, null);
 		}
 		public void draw(Graphics g, int dx, int dy) {
-			g.drawImage(image.getSubimage(frameState * spritew, 0, spritew, spriteh), dx, dy, spritew * pixelSize, spriteh * pixelSize, null);
+			draw(g, 0, 0, dx, dy);
+		}
+		public void drawBottom(Graphics g, int row, int col, int dx, int dy, double filled) {
+			int sy = (int)((1 - filled) * spriteh);
+			int sh = spriteh - sy;
+			g.drawImage(
+				image.getSubimage(col * spritew, row * spriteh + sy, spritew, sh),
+				dx, dy + sy * pixelSize, spritew * pixelSize, sh * pixelSize, null);
+		}
+	}
+	public class AnimatedSprite extends Sprite {
+		private int frameState = 0;
+		private int cols = 0;
+		public AnimatedSprite(BufferedImage i, int c) {
+			super(i, 1, c);
+			cols = c;
+		}
+		public void update() {
+			frameState = (frameState + 1) % cols;
+		}
+		public void draw(Graphics g, int dx, int dy) {
+			draw(g, 0, frameState, dx, dy);
 		}
 	}
 }
