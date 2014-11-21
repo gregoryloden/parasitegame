@@ -20,8 +20,8 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	}
 	//constants
 	public static final int FPS = 30;
-	public int width = 800;
-	public int height = 600;
+	public int width = 1200;
+	public int height = 450;
 	public static final double MAX_AIR = 600;
 	//images
 	public Sprite bed = null;
@@ -31,7 +31,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public Sprite breathing = null;
 	public Button breathe_button = null;
 	//states
-	public int pixelSize = 2;
+	public int pixelSize = 3;
 	public int parasiteState = 0;
 	public boolean painting = false;
 	public int currentAir = (int)(MAX_AIR);
@@ -73,7 +73,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 			person_bed = new Sprite(ImageIO.read(new File("images/person_bed.png")), 1, 2);
 			parasite = new AnimatedSprite(ImageIO.read(new File("images/parasite.png")), 4);
 			breathing = new Sprite(ImageIO.read(new File("images/breathing.png")), 1, 2);
-			breathe_button = new Button(ImageIO.read(new File("images/breathe_button.png")), 350, 400);
+			breathe_button = new Button(ImageIO.read(new File("images/breathe_button.png")), 750, 200);
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.exit(0);
@@ -91,11 +91,11 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		background.draw(g, 0, 0);
-		bed.draw(g, 26, 24);
-		person_bed.draw(g, 16, 72);
-		parasite.draw(g, 100, 100);
-		breathing.draw(g, 0, 1, 500, 100);
-		breathing.drawLeft(g, 0, 0, 500, 100, currentAir / MAX_AIR);
+		bed.draw(g, 39, 36);
+		person_bed.draw(g, 0, breathe_button.isPressed() ? 1 : 0, 24, 108);
+		parasite.draw(g, 150, 150);
+		breathing.draw(g, 0, 1, 750, 150);
+		breathing.drawLeft(g, 0, 0, 750, 150, currentAir / MAX_AIR);
 		if (showBreath)
 			breathe_button.draw(g);
 		painting = false;
