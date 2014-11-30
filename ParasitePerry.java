@@ -1,16 +1,18 @@
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.Toolkit;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import javax.swing.JFrame;
-import java.awt.Graphics;
-import java.awt.Color;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.KeyEvent;
-import java.awt.Insets;
-import java.io.File;
-import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
-import java.awt.Toolkit;
 public class ParasitePerry extends JPanel implements MouseListener, KeyListener {
 	public static int screenwidth() {
 		return Toolkit.getDefaultToolkit().getScreenSize().width;
@@ -90,9 +92,12 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	}
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
+		Graphics2D g2 = (Graphics2D)(g);
 		background.draw(g, 0, 0);
 		bed.draw(g, 39, 36);
 		person_bed.draw(g, 0, breathe_button.isPressed() ? 1 : 0, 24, 108);
+//fade-in
+//		g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
 		parasite.draw(g, 150, 150);
 		breathing.draw(g, 0, 1, 750, 150);
 		breathing.drawLeft(g, 0, 0, 750, 150, currentAir / MAX_AIR);
@@ -134,8 +139,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 		public void drawLeft(Graphics g, int row, int col, int dx, int dy, double filled) {
 			int sw = (int)(spritew * filled);
 			if (sw > 0)
-				g.drawImage(
-					image.getSubimage(col * spritew, row * spriteh, sw, spriteh),
+				g.drawImage(image.getSubimage(col * spritew, row * spriteh, sw, spriteh),
 					dx, dy, sw * pixelSize, spriteh * pixelSize, null);
 		}
 		// public void drawBottom(Graphics g, int row, int col, int dx, int dy, double filled) {
