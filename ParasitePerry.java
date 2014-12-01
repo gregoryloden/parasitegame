@@ -1,5 +1,6 @@
 import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
@@ -8,6 +9,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
@@ -30,14 +32,16 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public Sprite background = null;
 	public Sprite person_bed = null;
 	public AnimatedSprite parasite = null;
-	public Sprite breathing = null;
+	public Sprite lungs = null;
 	public Button breathe_button = null;
+	public BufferedImage skilltree = null;
 	//states
-	public int pixelSize = 3;
 	public int parasiteState = 0;
 	public boolean painting = false;
 	public int currentAir = (int)(MAX_AIR);
 	public boolean showBreath = false;
+	public int scene = 0;
+	public int sceneFrame = 0;
 	public static void main(String[] args) {
 		ParasitePerry thepanel = new ParasitePerry();
 		JFrame window = new JFrame("Parasite Perry");
@@ -70,37 +74,64 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 		addMouseListener(this);
 		setBackground(Color.BLACK);
 		try {
-			background = new Sprite(ImageIO.read(new File("images/background.png")), 1, 1);
-			bed = new Sprite(ImageIO.read(new File("images/bed.png")), 1, 1);
-			person_bed = new Sprite(ImageIO.read(new File("images/person_bed.png")), 1, 2);
-			parasite = new AnimatedSprite(ImageIO.read(new File("images/parasite.png")), 4);
-			breathing = new Sprite(ImageIO.read(new File("images/breathing.png")), 1, 2);
-			breathe_button = new Button(ImageIO.read(new File("images/breathe_button.png")), 750, 200);
+			double spritePixelSize = 3.0;
+			background = new Sprite(ImageIO.read(new File("images/background.png")), 1, 1, spritePixelSize);
+			bed = new Sprite(ImageIO.read(new File("images/bed.png")), 1, 1, spritePixelSize);
+			person_bed = new Sprite(ImageIO.read(new File("images/person_bed.png")), 1, 2, spritePixelSize);
+			parasite = new AnimatedSprite(ImageIO.read(new File("images/parasite.png")), 4, spritePixelSize);
+			lungs = new Sprite(ImageIO.read(new File("images/lungs.png")), 1, 2, spritePixelSize);
+			breathe_button = new Button(ImageIO.read(new File("images/skillbuttonbreathefull.png")), 697, 285, 0.5);
+			skilltree = ImageIO.read(new File("images/skilltreel1.png"));
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
 	}
 	public void update() {
+		if (scene <= 4) {
+			if (sceneFrame < 44)
+				sceneFrame += 1;
+			else {
+				sceneFrame = 0;
+				scene += 1;
+			}
+		}
 		parasite.update();
-		if (breathe_button.isPressed())
-			currentAir = Math.min(currentAir + 10, (int)(MAX_AIR));
-		else
-			currentAir -= 1;
-		if (!showBreath && currentAir <= (int)(MAX_AIR) / 2)
-			showBreath = true;
+		if (scene > 4) {
+			if (breathe_button.isPressed())
+				currentAir = Math.min(currentAir + 10, (int)(MAX_AIR));
+			else
+				currentAir -= 1;
+			if (!showBreath && currentAir <= (int)(MAX_AIR) / 2)
+				showBreath = true;
+		}
 	}
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D)(g);
 		background.draw(g, 0, 0);
 		bed.draw(g, 39, 36);
+		if (scene == 1) {
+			Composite ac = g2.getComposite();
+			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, sceneFrame / 45.0f));
+			parasite.draw(g, 150, 156);
+			g2.setComposite(ac);
+		} else if (scene == 2) {
+			parasite.draw(g, 150 - sceneFrame, 156 + sceneFrame);
+		}
 		person_bed.draw(g, 0, breathe_button.isPressed() ? 1 : 0, 24, 108);
-//fade-in
-//		g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
-		parasite.draw(g, 150, 150);
-		breathing.draw(g, 0, 1, 750, 150);
-		breathing.drawLeft(g, 0, 0, 750, 150, currentAir / MAX_AIR);
+		if (scene == 4) {
+			Composite ac = g2.getComposite();
+			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, sceneFrame / 45.0f));
+			lungs.draw(g, 0, 1, 531, 30);
+			lungs.drawBottom(g, 0, 0, 531, 30, currentAir / MAX_AIR);
+			g.drawImage(skilltree.getSubimage(370, 1164, 1200, 900), 600, 0, 600, 450, null);
+			g2.setComposite(ac);
+		} else if (scene > 4) {
+			lungs.draw(g, 0, 1, 531, 30);
+			lungs.drawBottom(g, 0, 0, 531, 30, currentAir / MAX_AIR);
+			g.drawImage(skilltree.getSubimage(370, 1164, 1200, 900), 600, 0, 600, 450, null);
+		}
 		if (showBreath)
 			breathe_button.draw(g);
 		painting = false;
@@ -123,38 +154,39 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 		private BufferedImage image;
 		protected int spritew;
 		protected int spriteh;
-		public Sprite(BufferedImage i, int r, int c) {
+		protected double pixelSize;
+		public Sprite(BufferedImage i, int r, int c, double p) {
 			image = i;
 			spriteh = i.getHeight() / r;
 			spritew = i.getWidth() / c;
+			pixelSize = p;
 		}
 		public void draw(Graphics g, int row, int col, int dx, int dy) {
-			g.drawImage(
-				image.getSubimage(col * spritew, row * spriteh, spritew, spriteh),
-				dx, dy, spritew * pixelSize, spriteh * pixelSize, null);
+			g.drawImage(image.getSubimage(col * spritew, row * spriteh, spritew, spriteh),
+				dx, dy, (int)(spritew * pixelSize), (int)(spriteh * pixelSize), null);
 		}
 		public void draw(Graphics g, int dx, int dy) {
 			draw(g, 0, 0, dx, dy);
 		}
-		public void drawLeft(Graphics g, int row, int col, int dx, int dy, double filled) {
-			int sw = (int)(spritew * filled);
-			if (sw > 0)
-				g.drawImage(image.getSubimage(col * spritew, row * spriteh, sw, spriteh),
-					dx, dy, sw * pixelSize, spriteh * pixelSize, null);
-		}
-		// public void drawBottom(Graphics g, int row, int col, int dx, int dy, double filled) {
-			// int sy = (int)((1 - filled) * spriteh);
-			// int sh = spriteh - sy;
-			// g.drawImage(
-				// image.getSubimage(col * spritew, row * spriteh + sy, spritew, sh),
-				// dx, dy + sy * pixelSize, spritew * pixelSize, sh * pixelSize, null);
+		// public void drawLeft(Graphics g, int row, int col, int dx, int dy, double filled) {
+			// int sw = (int)(spritew * filled);
+			// if (sw > 0)
+				// g.drawImage(image.getSubimage(col * spritew, row * spriteh, sw, spriteh),
+					// dx, dy, sw * pixelSize, spriteh * pixelSize, null);
 		// }
+		public void drawBottom(Graphics g, int row, int col, int dx, int dy, double filled) {
+			int sy = (int)((1 - filled) * spriteh);
+			int sh = spriteh - sy;
+			if (sh > 0)
+				g.drawImage(image.getSubimage(col * spritew, row * spriteh + sy, spritew, sh),
+					dx, dy + (int)(sy * pixelSize), (int)(spritew * pixelSize), (int)(sh * pixelSize), null);
+		}
 	}
 	public class AnimatedSprite extends Sprite {
 		private int frameState = 0;
 		private int cols = 0;
-		public AnimatedSprite(BufferedImage i, int c) {
-			super(i, 1, c);
+		public AnimatedSprite(BufferedImage i, int c, double p) {
+			super(i, 1, c, p);
 			cols = c;
 		}
 		public void update() {
@@ -168,13 +200,13 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 		private int x;
 		private int y;
 		private boolean pressed = false;
-		public Button(BufferedImage i, int x0, int y0) {
-			super(i, 1, 2);
+		public Button(BufferedImage i, int x0, int y0, double p) {
+			super(i, 1, 2, p);
 			x = x0;
 			y = y0;
 		}
 		public void press(int mousex, int mousey) {
-			pressed = mousex >= x && mousex < x + spritew * pixelSize && mousey >= y && mousey < y + spriteh * pixelSize;
+			pressed = mousex >= x && mousex < x + (int)(spritew * pixelSize) && mousey >= y && mousey < y + (int)(spriteh * pixelSize);
 		}
 		public void release() {
 			pressed = false;
