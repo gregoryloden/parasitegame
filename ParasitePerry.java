@@ -111,7 +111,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 					if (scene == 5 && exp >= 100)
 						scene = 6;
 				}
-				currentAir = Math.min(currentAir + 10, (int)(MAX_AIR));
+				currentAir = Math.min(currentAir + (autobreathing ? 6 : 10), (int)(MAX_AIR));
 				if (autobreathing && currentAir >= (int)(MAX_AIR))
 					autobreathing = false;
 			} else {
