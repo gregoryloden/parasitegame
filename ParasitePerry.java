@@ -1,6 +1,7 @@
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Composite;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
@@ -35,6 +36,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public Sprite lungs = null;
 	public Button breathe_button = null;
 	public BufferedImage skilltree = null;
+	public Sprite autobreathe = null;
 	//states
 	public int parasiteState = 0;
 	public boolean painting = false;
@@ -42,6 +44,9 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public boolean showBreath = false;
 	public int scene = 0;
 	public int sceneFrame = 0;
+	public boolean showText = false;
+	public int exp = 0;
+	public boolean autobreathing = false;
 	public static void main(String[] args) {
 		ParasitePerry thepanel = new ParasitePerry();
 		JFrame window = new JFrame("Parasite Perry");
@@ -82,13 +87,14 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 			lungs = new Sprite(ImageIO.read(new File("images/lungs.png")), 1, 2, spritePixelSize);
 			breathe_button = new Button(ImageIO.read(new File("images/skillbuttonbreathefull.png")), 697, 285, 0.5);
 			skilltree = ImageIO.read(new File("images/skilltreel1.png"));
+			autobreathe = new Sprite(ImageIO.read(new File("images/skillbuttonautobreathe00.png")), 1, 1, 0.5);
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
 	}
 	public void update() {
-		if (scene <= 4) {
+		if (scene <= 4 || scene == 6) {
 			if (sceneFrame < 44)
 				sceneFrame += 1;
 			else {
@@ -98,12 +104,25 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 		}
 		parasite.update();
 		if (scene > 4) {
-			if (breathe_button.isPressed())
+			boolean pressedButton = breathe_button.isPressed();
+			if (pressedButton || autobreathing) {
+				if (pressedButton && currentAir < (int)(MAX_AIR)) {
+					exp += 1;
+					if (scene == 5 && exp >= 100)
+						scene = 6;
+				}
 				currentAir = Math.min(currentAir + 10, (int)(MAX_AIR));
-			else
+				if (autobreathing && currentAir >= (int)(MAX_AIR))
+					autobreathing = false;
+			} else {
 				currentAir -= 1;
-			if (!showBreath && currentAir <= (int)(MAX_AIR) / 2)
+				if (exp >= 100 && !autobreathing && currentAir <= (int)(MAX_AIR) / 2)
+					autobreathing = true;
+			}
+			if (!showBreath && currentAir <= (int)(MAX_AIR) / 2) {
 				showBreath = true;
+				showText = true;
+			}
 		}
 	}
 	public void paintComponent(Graphics g) {
@@ -119,27 +138,41 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 		} else if (scene == 2) {
 			parasite.draw(g, 150 - sceneFrame, 156 + sceneFrame);
 		}
-		person_bed.draw(g, 0, breathe_button.isPressed() ? 1 : 0, 24, 108);
-		if (scene == 4) {
+		person_bed.draw(g, 0, (breathe_button.isPressed() || autobreathing) ? 1 : 0, 24, 108);
+		if (scene >= 4) {
 			Composite ac = g2.getComposite();
-			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, sceneFrame / 45.0f));
+			if (scene == 4)
+				g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, sceneFrame / 45.0f));
 			lungs.draw(g, 0, 1, 531, 30);
 			lungs.drawBottom(g, 0, 0, 531, 30, currentAir / MAX_AIR);
+			g.setColor(Color.WHITE);
+			g.setFont(new Font("Dialog", Font.BOLD, 16));
+			g.drawString(String.valueOf(exp), 531, 80);
 			g.drawImage(skilltree.getSubimage(370, 1164, 1200, 900), 600, 0, 600, 450, null);
 			g2.setComposite(ac);
-		} else if (scene > 4) {
-			lungs.draw(g, 0, 1, 531, 30);
-			lungs.drawBottom(g, 0, 0, 531, 30, currentAir / MAX_AIR);
-			g.drawImage(skilltree.getSubimage(370, 1164, 1200, 900), 600, 0, 600, 450, null);
 		}
 		if (showBreath)
 			breathe_button.draw(g);
+		if (showText) {
+			g.setColor(Color.BLACK);
+			g.drawString("Click the button to breathe!", 815, 400);
+		}
+		if (scene >= 6) {
+			autobreathe.draw(g, 824, 179);
+			if (scene == 6) {
+				g.setColor(Color.BLACK);
+				g.drawString("Auto breathing unlocked!", 845, 270);
+			}
+		}
 		painting = false;
 	}
 	public void mousePressed(MouseEvent evt) {
 		requestFocus();
-		if (showBreath)
+		if (showBreath) {
 			breathe_button.press(evt.getX(), evt.getY());
+			if (breathe_button.isPressed())
+				showText = false;
+		}
 	}
 	public void mouseReleased(MouseEvent evt) {
 		breathe_button.release();
