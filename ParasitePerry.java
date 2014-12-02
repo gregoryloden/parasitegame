@@ -37,6 +37,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public Button breathe_button = null;
 	public BufferedImage skilltree = null;
 	public Sprite autobreathe = null;
+	public BufferedImage skillbg = null;
 	//states
 	public int parasiteState = 0;
 	public boolean painting = false;
@@ -88,6 +89,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 			breathe_button = new Button(ImageIO.read(new File("images/skillbuttonbreathefull.png")), 697, 285, 0.5);
 			skilltree = ImageIO.read(new File("images/skilltreel1.png"));
 			autobreathe = new Sprite(ImageIO.read(new File("images/skillbuttonautobreathe00.png")), 1, 1, 0.5);
+			skillbg = ImageIO.read(new File("images/skillbg.png"));
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.exit(0);
@@ -148,6 +150,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 			g.setColor(Color.WHITE);
 			g.setFont(new Font("Dialog", Font.BOLD, 16));
 			g.drawString(String.valueOf(exp), 531, 80);
+			g.drawImage(skillbg.getSubimage(370, 1164, 1200, 900), 600, 0, 600, 450, null);
 			g.drawImage(skilltree.getSubimage(370, 1164, 1200, 900), 600, 0, 600, 450, null);
 			g2.setComposite(ac);
 		}
