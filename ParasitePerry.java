@@ -153,16 +153,12 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 		}
 		if (showBreath)
 			breathe_button.draw(g);
-		if (showText) {
-			g.setColor(Color.BLACK);
+		if (showText)
 			g.drawString("Click the button to breathe!", 815, 400);
-		}
 		if (scene >= 6) {
 			autobreathe.draw(g, 824, 179);
-			if (scene == 6) {
-				g.setColor(Color.BLACK);
+			if (scene == 6)
 				g.drawString("Auto breathing unlocked!", 845, 270);
-			}
 		}
 		painting = false;
 	}
