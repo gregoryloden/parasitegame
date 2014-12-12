@@ -27,7 +27,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public static final int FPS = 30;
 	public int width = 1200;
 	public int height = 450;
-	public static final double MAX_AIR = 600;
+	public static final int MAX_AIR = 600;
 	//images
 	public Sprite bed = null;
 	public Sprite background = null;
@@ -41,7 +41,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	//states
 	public int parasiteState = 0;
 	public boolean painting = false;
-	public int currentAir = (int)(MAX_AIR);
+	public int currentAir = MAX_AIR;
 	public boolean showBreath = false;
 	public int scene = 0;
 	public int sceneFrame = 0;
@@ -108,20 +108,26 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 		if (scene > 4) {
 			boolean pressedButton = breathe_button.isPressed();
 			if (pressedButton || autobreathing) {
-				if (pressedButton && currentAir < (int)(MAX_AIR)) {
+				if (pressedButton && currentAir < MAX_AIR) {
 					exp += 1;
 					if (scene == 5 && exp >= 100)
 						scene = 6;
 				}
-				currentAir = Math.min(currentAir + (autobreathing ? 6 : 10), (int)(MAX_AIR));
-				if (autobreathing && currentAir >= (int)(MAX_AIR))
-					autobreathing = false;
+				currentAir += (autobreathing ? 6 : 10);
+				if (currentAir >= MAX_AIR) {
+					if (currentAir > MAX_AIR)
+						currentAir = MAX_AIR;
+					if (autobreathing)
+						autobreathing = false;
+					else
+						breathe_button.release();
+				}
 			} else {
 				currentAir -= 1;
-				if (exp >= 100 && !autobreathing && currentAir <= (int)(MAX_AIR) / 2)
+				if (exp >= 100 && !autobreathing && currentAir <= MAX_AIR / 2)
 					autobreathing = true;
 			}
-			if (!showBreath && currentAir <= (int)(MAX_AIR) / 2) {
+			if (!showBreath && currentAir <= MAX_AIR / 2) {
 				showBreath = true;
 				showText = true;
 			}
