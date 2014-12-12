@@ -152,7 +152,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 			if (scene == 4)
 				g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, sceneFrame / 45.0f));
 			lungs.draw(g, 0, 1, 531, 30);
-			lungs.drawBottom(g, 0, 0, 531, 30, currentAir / MAX_AIR);
+			lungs.drawBottom(g, 0, 0, 531, 30, (double)(currentAir) / MAX_AIR);
 			g.setColor(Color.WHITE);
 			g.setFont(new Font("Dialog", Font.BOLD, 16));
 			g.drawString(String.valueOf(exp), 531, 80);
