@@ -10,13 +10,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import javax.swing.JFrame;
-public class ParasitePerry extends JPanel implements MouseListener, KeyListener {
+public class ParasitePerry extends JPanel implements MouseListener, MouseMotionListener, KeyListener {
 	public static int screenwidth() {
 		return Toolkit.getDefaultToolkit().getScreenSize().width;
 	}
@@ -28,6 +29,8 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public int width = 1200;
 	public int height = 450;
 	public static final int MAX_AIR = 600;
+	public static final int INITIAL_TREEX = -370/2;
+	public static final int INITIAL_TREEY = -1164/2;
 	//images
 	public Sprite bed = null;
 	public Sprite background = null;
@@ -48,6 +51,13 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public boolean showText = false;
 	public int exp = 0;
 	public boolean autobreathing = false;
+	public int treex = INITIAL_TREEX;
+	public int treey = INITIAL_TREEY;
+	public int oldmousex = -1;
+	public int oldmousey = -1;
+	public int oldtreex = -1;
+	public int oldtreey = -1;
+	public boolean panning = false;
 	public static void main(String[] args) {
 		ParasitePerry thepanel = new ParasitePerry();
 		JFrame window = new JFrame("Parasite Perry");
@@ -78,6 +88,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public ParasitePerry() {
 		addKeyListener(this);
 		addMouseListener(this);
+		addMouseMotionListener(this);
 		setBackground(Color.BLACK);
 		try {
 			double spritePixelSize = 3.0;
@@ -86,9 +97,10 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 			person_bed = new Sprite(ImageIO.read(new File("images/person_bed.png")), 1, 2, spritePixelSize);
 			parasite = new AnimatedSprite(ImageIO.read(new File("images/parasite.png")), 4, spritePixelSize);
 			lungs = new Sprite(ImageIO.read(new File("images/lungs.png")), 1, 2, spritePixelSize);
-			breathe_button = new Button(ImageIO.read(new File("images/skillbuttonbreathefull.png")), 697, 285, 0.5);
+			breathe_button = new Button(ImageIO.read(new File("images/skillbuttonbreathefull.png")),
+				697 - INITIAL_TREEX, 285 - INITIAL_TREEY, 0.5);
 			skilltree = ImageIO.read(new File("images/skilltreel1.png"));
-			autobreathe = new Sprite(ImageIO.read(new File("images/skillbuttonautobreathe00.png")), 1, 1, 0.5);
+			autobreathe = new Sprite(ImageIO.read(new File("images/skillbuttonautobreathefull.png")), 1, 2, 0.5);
 			skillbg = ImageIO.read(new File("images/skillbg.png"));
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -124,7 +136,7 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 				}
 			} else {
 				currentAir -= 1;
-				if (exp >= 100 && !autobreathing && currentAir <= MAX_AIR / 2)
+				if (exp >= 100 && currentAir <= MAX_AIR / 2)
 					autobreathing = true;
 			}
 			if (!showBreath && currentAir <= MAX_AIR / 2) {
@@ -136,6 +148,25 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D)(g);
+		if (scene >= 4) {
+			Composite ac = g2.getComposite();
+			if (scene == 4)
+				g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, sceneFrame / 45.0f));
+			g.setColor(Color.WHITE);
+			g.setFont(new Font("Dialog", Font.BOLD, 16));
+			g.drawImage(skillbg, 600 + treex, treey, skillbg.getWidth() / 2, skillbg.getHeight() / 2, null);
+			g.drawImage(skilltree, 600 + treex, treey, skilltree.getWidth() / 2, skilltree.getHeight() / 2, null);
+			g2.setComposite(ac);
+		}
+		if (showBreath)
+			breathe_button.draw(g);
+		if (showText)
+			g.drawString("Click the button to breathe!", 815 - INITIAL_TREEX + treex, 400 - INITIAL_TREEY + treey);
+		if (scene >= 6) {
+			autobreathe.draw(g, 0, autobreathing ? 1 : 0, 824 - INITIAL_TREEX + treex, 179 - INITIAL_TREEY + treey);
+			if (scene == 6)
+				g.drawString("Auto breathing unlocked!", 845 - INITIAL_TREEX + treex, 270 - INITIAL_TREEY + treey);
+		}
 		background.draw(g, 0, 0);
 		bed.draw(g, 39, 36);
 		if (scene == 1) {
@@ -145,46 +176,47 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 			g2.setComposite(ac);
 		} else if (scene == 2) {
 			parasite.draw(g, 150 - sceneFrame, 156 + sceneFrame);
-		}
-		person_bed.draw(g, 0, (breathe_button.isPressed() || autobreathing) ? 1 : 0, 24, 108);
-		if (scene >= 4) {
+		} else if (scene >= 4) {
 			Composite ac = g2.getComposite();
 			if (scene == 4)
 				g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, sceneFrame / 45.0f));
+			g.drawString(String.valueOf(exp), 531, 80);
 			lungs.draw(g, 0, 1, 531, 30);
 			lungs.drawBottom(g, 0, 0, 531, 30, (double)(currentAir) / MAX_AIR);
-			g.setColor(Color.WHITE);
-			g.setFont(new Font("Dialog", Font.BOLD, 16));
-			g.drawString(String.valueOf(exp), 531, 80);
-			g.drawImage(skillbg.getSubimage(370, 1164, 1200, 900), 600, 0, 600, 450, null);
-			g.drawImage(skilltree.getSubimage(370, 1164, 1200, 900), 600, 0, 600, 450, null);
 			g2.setComposite(ac);
 		}
-		if (showBreath)
-			breathe_button.draw(g);
-		if (showText)
-			g.drawString("Click the button to breathe!", 815, 400);
-		if (scene >= 6) {
-			autobreathe.draw(g, 824, 179);
-			if (scene == 6)
-				g.drawString("Auto breathing unlocked!", 845, 270);
-		}
+		person_bed.draw(g, 0, (breathe_button.isPressed() || autobreathing) ? 1 : 0, 24, 108);
 		painting = false;
 	}
 	public void mousePressed(MouseEvent evt) {
 		requestFocus();
+		oldmousex = evt.getX();
+		oldmousey = evt.getY();
 		if (showBreath) {
-			breathe_button.press(evt.getX(), evt.getY());
+			breathe_button.press(oldmousex, oldmousey);
 			if (breathe_button.isPressed())
 				showText = false;
+		}
+		if (scene >= 4 && oldmousex >= 600) {
+			oldtreex = treex;
+			oldtreey = treey;
+			panning = true;
 		}
 	}
 	public void mouseReleased(MouseEvent evt) {
 		breathe_button.release();
+		panning = false;
+	}
+	public void mouseDragged(MouseEvent evt) {
+		if (panning) {
+			treex = Math.max(Math.min(0, oldtreex + evt.getX() - oldmousex), 600 - skilltree.getWidth() / 2);
+			treey = Math.max(Math.min(0, oldtreey + evt.getY() - oldmousey), 450 - skilltree.getHeight() / 2);
+		}
 	}
 	public void mouseClicked(MouseEvent evt) {}
 	public void mouseEntered(MouseEvent evt) {}
 	public void mouseExited(MouseEvent evt) {}
+	public void mouseMoved(MouseEvent evt) {}
 	public void keyTyped(KeyEvent evt) {}
 	public void keyPressed(KeyEvent evt) {}
 	public void keyReleased(KeyEvent evt) {}
@@ -244,13 +276,16 @@ public class ParasitePerry extends JPanel implements MouseListener, KeyListener 
 			y = y0;
 		}
 		public void press(int mousex, int mousey) {
-			pressed = mousex >= x && mousex < x + (int)(spritew * pixelSize) && mousey >= y && mousey < y + (int)(spriteh * pixelSize);
+			int realx = x + treex;
+			int realy = y + treey;
+			pressed = mousex >= realx && mousex < realx + (int)(spritew * pixelSize) &&
+				mousey >= realy && mousey < realy + (int)(spriteh * pixelSize);
 		}
 		public void release() {
 			pressed = false;
 		}
 		public void draw(Graphics g) {
-			draw(g, 0, pressed ? 1 : 0, x, y);
+			draw(g, 0, pressed ? 1 : 0, x + treex, y + treey);
 		}
 		public boolean isPressed() {return pressed;}
 	}
