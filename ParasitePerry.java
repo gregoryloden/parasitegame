@@ -43,6 +43,8 @@ public class ParasitePerry extends JPanel implements MouseListener, MouseMotionL
 	public BufferedImage skillbg = null;
 	public Sprite kitchenroom = null;
 	public Sprite room_button = null;
+	public Button faceplant = null;
+	public Sprite faceplantanim = null;
 	//states
 	public int parasiteState = 0;
 	public boolean painting = false;
@@ -61,7 +63,7 @@ public class ParasitePerry extends JPanel implements MouseListener, MouseMotionL
 	public int oldtreey = -1;
 	public boolean panning = false;
 	public boolean inKitchen = false;
-	public int roombuttonx = 1130;
+	public int roombuttonx = 1131;
 	public int roombuttony = 510;
 	public static void main(String[] args) {
 		ParasitePerry thepanel = new ParasitePerry();
@@ -109,14 +111,14 @@ public class ParasitePerry extends JPanel implements MouseListener, MouseMotionL
 			skillbg = ImageIO.read(new File("images/skillbg.png"));
 			kitchenroom = new Sprite(ImageIO.read(new File("images/kitchenroom.png")), 1, 1, spritePixelSize / 2.0);
 			room_button = new Sprite(ImageIO.read(new File("images/roombutton.png")), 1, 2, 0.5);
+			faceplant = new Button(ImageIO.read(new File("images/skillbuttonfaceplant.png")), 985, 397, 0.25);
+			faceplantanim = new Sprite(ImageIO.read(new File("images/faceplantanim.png")), 1, 10, spritePixelSize / 2.0);
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
 	}
 	public void update() {
-		if (inKitchen)
-			return;
 		if (scene <= 4 || scene == 6) {
 			if (sceneFrame < 44)
 				sceneFrame += 1;
@@ -124,7 +126,16 @@ public class ParasitePerry extends JPanel implements MouseListener, MouseMotionL
 				sceneFrame = 0;
 				scene += 1;
 			}
+		} else if (scene == 8) {
+			if (sceneFrame < 99)
+				sceneFrame += 1;
+			else {
+				scene = 7;
+				faceplant.release();
+			}
 		}
+		if (inKitchen)
+			return;
 		parasite.update();
 		if (scene > 4) {
 			boolean pressedButton = breathe_button.isPressed();
@@ -176,9 +187,18 @@ public class ParasitePerry extends JPanel implements MouseListener, MouseMotionL
 			if (scene == 6)
 				g.drawString("Auto breathing unlocked!", 845 - INITIAL_TREEX + treex, 270 - INITIAL_TREEY + treey);
 			room_button.draw(g, 0, inKitchen ? 1 : 0, roombuttonx + treex, roombuttony + treey);
+			faceplant.draw(g);
 		}
 		if (inKitchen) {
 			kitchenroom.draw(g, 0, 0);
+			if (scene != 8)
+				faceplantanim.draw(g, 273, 113);
+			else if (sceneFrame < 27)
+				faceplantanim.draw(g, 0, sceneFrame / 3, 273, 113);
+			else if (sceneFrame < 90)
+				faceplantanim.draw(g, 0, 9, 273, 113);
+			else
+				faceplantanim.draw(g, 0, (102 - sceneFrame) / 3, 273, 113);
 			painting = false;
 			return;
 		}
@@ -215,9 +235,13 @@ public class ParasitePerry extends JPanel implements MouseListener, MouseMotionL
 			inKitchen = !inKitchen;
 			return;
 		}
-		if (inKitchen)
-			return;
-		if (showBreath) {
+		if (inKitchen) {
+			faceplant.press(oldmousex, oldmousey);
+			if (faceplant.isPressed() && scene != 8) {
+				scene = 8;
+				sceneFrame = 0;
+			}
+		} else if (showBreath) {
 			breathe_button.press(oldmousex, oldmousey);
 			if (breathe_button.isPressed())
 				showText = false;
