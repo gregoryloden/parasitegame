@@ -41,6 +41,8 @@ public class ParasitePerry extends JPanel implements MouseListener, MouseMotionL
 	public BufferedImage skilltree = null;
 	public Sprite autobreathe = null;
 	public BufferedImage skillbg = null;
+	public Sprite kitchenroom = null;
+	public Sprite room_button = null;
 	//states
 	public int parasiteState = 0;
 	public boolean painting = false;
@@ -58,6 +60,9 @@ public class ParasitePerry extends JPanel implements MouseListener, MouseMotionL
 	public int oldtreex = -1;
 	public int oldtreey = -1;
 	public boolean panning = false;
+	public boolean inKitchen = false;
+	public int roombuttonx = 1130;
+	public int roombuttony = 510;
 	public static void main(String[] args) {
 		ParasitePerry thepanel = new ParasitePerry();
 		JFrame window = new JFrame("Parasite Perry");
@@ -102,12 +107,16 @@ public class ParasitePerry extends JPanel implements MouseListener, MouseMotionL
 			skilltree = ImageIO.read(new File("images/skilltreel1.png"));
 			autobreathe = new Sprite(ImageIO.read(new File("images/skillbuttonautobreathefull.png")), 1, 2, 0.5);
 			skillbg = ImageIO.read(new File("images/skillbg.png"));
+			kitchenroom = new Sprite(ImageIO.read(new File("images/kitchenroom.png")), 1, 1, spritePixelSize / 2.0);
+			room_button = new Sprite(ImageIO.read(new File("images/roombutton.png")), 1, 2, 0.5);
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.exit(0);
 		}
 	}
 	public void update() {
+		if (inKitchen)
+			return;
 		if (scene <= 4 || scene == 6) {
 			if (sceneFrame < 44)
 				sceneFrame += 1;
@@ -166,6 +175,12 @@ public class ParasitePerry extends JPanel implements MouseListener, MouseMotionL
 			autobreathe.draw(g, 0, autobreathing ? 1 : 0, 824 - INITIAL_TREEX + treex, 179 - INITIAL_TREEY + treey);
 			if (scene == 6)
 				g.drawString("Auto breathing unlocked!", 845 - INITIAL_TREEX + treex, 270 - INITIAL_TREEY + treey);
+			room_button.draw(g, 0, inKitchen ? 1 : 0, roombuttonx + treex, roombuttony + treey);
+		}
+		if (inKitchen) {
+			kitchenroom.draw(g, 0, 0);
+			painting = false;
+			return;
 		}
 		background.draw(g, 0, 0);
 		bed.draw(g, 39, 36);
@@ -192,6 +207,16 @@ public class ParasitePerry extends JPanel implements MouseListener, MouseMotionL
 		requestFocus();
 		oldmousex = evt.getX();
 		oldmousey = evt.getY();
+		//got lazy and copy-pasted the button code so as not to have to change it
+		int realx = roombuttonx + treex;
+		int realy = roombuttony + treey;
+		if (oldmousex >= realx && oldmousex < realx + (int)(room_button.width() * 0.5) &&
+			oldmousey >= realy && oldmousey < realy + (int)(room_button.height() * 0.5)) {
+			inKitchen = !inKitchen;
+			return;
+		}
+		if (inKitchen)
+			return;
 		if (showBreath) {
 			breathe_button.press(oldmousex, oldmousey);
 			if (breathe_button.isPressed())
@@ -251,6 +276,8 @@ public class ParasitePerry extends JPanel implements MouseListener, MouseMotionL
 				g.drawImage(image.getSubimage(col * spritew, row * spriteh + sy, spritew, sh),
 					dx, dy + (int)(sy * pixelSize), (int)(spritew * pixelSize), (int)(sh * pixelSize), null);
 		}
+		public int width() {return spritew;}
+		public int height() {return spriteh;}
 	}
 	public class AnimatedSprite extends Sprite {
 		private int frameState = 0;
